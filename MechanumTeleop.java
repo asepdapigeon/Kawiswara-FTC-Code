@@ -35,7 +35,10 @@ public class MechanumTeleop extends LinearOpMode {
       while (opModeIsActive()) {
         float speed = gamepad1.left_stick_y;
         float turn = gamepad1.right_stick_x;
-
+        boolean a = gamepad1.a;
+        boolean b = gamepad1.b;
+        boolean x = gamepad1.x;
+        boolean y = gamepad1.y;
         
         leftRear.setPower(speed + turn);
         leftFront.setPower(speed + turn);
