@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @TeleOp(name = "MechanumTeleop (Blocks to Java)")
-public class MechanumTeleop extends LinearOpMode {
+public class 1PlayerTeleop extends LinearOpMode {
 
   private DcMotor leftRear;
   private DcMotor leftFront;
