@@ -37,7 +37,10 @@ public class MechanumTeleop extends LinearOpMode {
         float turn = gamepad1.right_stick_x;
 
         
-        leftRear.setPower(speed;
+        leftRear.setPower(speed + turn);
+        leftFront.setPower(speed + turn);
+        rightRear.setPower(speed - turn);
+        rightFront.setPower(speed - turn);
       }
     }
   }
