@@ -42,8 +42,8 @@ public class OnePlayerTeleop extends LinearOpMode {
           moveLifter(1);
         }
 
-        leftRear.setPower(speed + turn);
-        rightRear.setPower(speed - turn);
+        leftDrive.setPower(speed + turn);
+        rightDrive.setPower(speed - turn);
       }
     }
   }
