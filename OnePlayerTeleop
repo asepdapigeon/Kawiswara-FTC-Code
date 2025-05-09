@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "OnePlayerTeleop (Blocks to Java)")
+@TeleOp(name = "OnePlayerTeleop (uhhers is dumbbb)")
 public class OnePlayerTeleop extends LinearOpMode {
 
   private Servo lifter;
