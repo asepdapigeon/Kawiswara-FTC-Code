@@ -10,10 +10,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class OnePlayerTeleop extends LinearOpMode {
 
   private Servo lifter;
-  private DcMotor leftRear;
-  private DcMotor leftFront;
-  private DcMotor rightFront;
-  private DcMotor rightRear;
+  private DcMotor leftDrive;
+  private DcMotor rightDrive;
 
   private int currentLifterPos = 0;
   private final double[] variableLifterPos = {0, 0.5, 1};
