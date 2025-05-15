@@ -1,11 +1,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import org.firstinspires.ftc.robotcore.external.JavaUtil;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "MechanumTeleop (Blocks to Java)")
+@TeleOp(name = "Mechanum Move 1 Rotation")
 public class MechanumTeleop extends LinearOpMode {
 
   private DcMotor leftRear;
@@ -13,13 +12,6 @@ public class MechanumTeleop extends LinearOpMode {
   private DcMotor rightFront;
   private DcMotor rightRear;
 
-  /**
-   * This sample contains the bare minimum Blocks for any regular OpMode. The 3 blue
-   * Comment Blocks show where to place Initialization code (runs once, after touching the
-   * DS INIT button, and before touching the DS Start arrow), Run code (runs once, after
-   * touching Start), and Loop code (runs repeatedly while the OpMode is active, namely not
-   * Stopped).
-   */
   @Override
   public void runOpMode() {
     
@@ -28,28 +20,41 @@ public class MechanumTeleop extends LinearOpMode {
     rightFront = hardwareMap.get(DcMotor.class, "rightFront");
     rightRear = hardwareMap.get(DcMotor.class, "rightRear");
 
+    // Reverse left motors if needed
     leftRear.setDirection(DcMotor.Direction.REVERSE);
     leftFront.setDirection(DcMotor.Direction.REVERSE);
 
+    // Wait for start
     waitForStart();
+
     if (opModeIsActive()) {
+      DcMotor[] motors = {leftFront, leftRear, rightFront, rightRear};
 
+      // Reset encoders and set target
+      for (DcMotor motor : motors) {
+          motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+          motor.setTargetPosition(537); // 1 wheel rotation
+          motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+          motor.setPower(0.5); // Set a moderate speed
+      }
+
+      // Wait until all motors reach target
+      while (opModeIsActive() && (leftFront.isBusy() || leftRear.isBusy() ||
+              rightFront.isBusy() || rightRear.isBusy())) {
+          telemetry.addData("LF Pos", leftFront.getCurrentPosition());
+          telemetry.addData("RF Pos", rightFront.getCurrentPosition());
+          telemetry.update();
+      }
+
+      // Stop motors
+      for (DcMotor motor : motors) {
+          motor.setPower(0);
+      }
+
+      // Optional: stay in telemetry loop
       while (opModeIsActive()) {
-        DcMotor[] motors = {leftFront, leftRear, rightFront, rightRear};
-
-        for (DcMotor motor : motors) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setTargetPosition(537); // 1 rotation
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            motor.setPower(0.5); // Set a moderate speed
-        }
-        
-        while (opModeIsActive() && (leftFront.isBusy() || leftRear.isBusy() ||
-                rightFront.isBusy() || rightRear.isBusy())) {
-            telemetry.addData("LF Pos", leftFront.getCurrentPosition());
-            telemetry.addData("RF Pos", rightFront.getCurrentPosition());
-            telemetry.update();
-        }
+          telemetry.addLine("Movement complete.");
+          telemetry.update();
       }
     }
   }
