@@ -1,0 +1,84 @@
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+public class MyFIRSTJavaOpMode extends LinearOpMode {
+    DcMotor driveLeft;
+    DcMotor driveRight;
+    DcMotor shootwheel;
+    DcMotor backLeftDrive;
+    DcMotor backRightDrive;
+    DcMotor frontLeftDrive;
+    DcMotor frontRightDrive;
+    ColorSensor color1;
+    BNO055IMU imu;
++-
+//    var duration, myVisionPortalBuilder, myAprilTagDetections, myVisionPortal, myAprilTagDetection, myApriltagProcessor, myAprilTagProcessorBuilder;
+
+    @Override
+    public void runOpMode() {
+        shootwheel = hardwareMap.get(DcMotor.class, "shootwheel");
+        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
+        backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
+        frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
+        frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
+        color1 = hardwareMap.get(ColorSensor.class, "color1");
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        backLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        waitForStart();
+
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        sleep(250);
+    }
+
+
+    public void normalMove(double speed, int backLeftPos, int frontLeftPos, int backRightPos, int FrontRightPos) {
+        int newBackLeftTarget = backLeftDrive.getCurrentPosition() + backLeftPos;
+        int newFrontLeftTarget = frontLeftDrive.getCurrentPosition() + frontLeftPos;
+        int newBackRightTarget = backRightDrive.getCurrentPosition() + backRightPos;
+        int newFrontRightTarget = frontRightDrive.getCurrentPosition() + FrontRightPos;
+
+        backLeftDrive.setTargetPosition(newBackLeftTarget);
+        frontLeftDrive.setTargetPosition(newFrontLeftTarget);
+        backRightDrive.setTargetPosition(newBackRightTarget);
+        frontRightDrive.setTargetPosition(newFrontRightTarget);
+
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        backLeftDrive.setPower(Math.abs(speed));
+        frontLeftDrive.setPower(Math.abs(speed));
+        backRightDrive.setPower(Math.abs(speed));
+        frontRightDrive.setPower(Math.abs(speed));
+
+        while (opModeIsActive() && backLeftDrive.isBusy() && frontLeftDrive.isBusy()&& backRightDrive.isBusy() && frontRightDrive.isBusy()) {
+        }
+
+        backLeftDrive.setPower(0);
+        frontLeftDrive.setPower(0);
+        backRightDrive.setPower(0);
+        frontRightDrive.setPower(0);
+
+        backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        sleep(250);
+    }
+}
