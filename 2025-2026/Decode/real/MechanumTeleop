@@ -51,34 +51,45 @@ import com.qualcomm.robotcore.util.Range;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
+@TeleOp(name="uhhersteleop", group="Linear OpMode")
 
 public class uhhersteleop extends LinearOpMode {
 
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor backLeftDrive = null;
-    private DcMotor backRightDrive = null;
+    private DcMotor rearLeftDrive = null;
+    private DcMotor rearRightDrive = null;
     private DcMotor frontLeftDrive = null;
     private DcMotor frontRightDrive = null;
+    private DcMotor launcherUp = null;
+    private DcMotor launcherDown = null;
     
     @Override
     public void runOpMode() {
-        backLeftDrive = hardwareMap.get(DcMotor.class, "backLeftDrive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "backRightDrive");
+        rearLeftDrive = hardwareMap.get(DcMotor.class, "rearLeftDrive");
+        rearRightDrive = hardwareMap.get(DcMotor.class, "rearRightDrive");
         frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
+        launcherUp = hardwareMap.get(DcMotor.class, "launcherUp");
+        launcherDown = hardwareMap.get(DcMotor.class, "launcherDown");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        intakeServo = hardwareMap.get(Servo.class, "intakeServo");
     
+        rearLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        launcherDown.setDirection(DcMotor.Direction.REVERSE);
         // Put initialization blocks here.
         waitForStart();
         if (opModeIsActive()) {
           // Put run blocks here.
           while (opModeIsActive()) {
             float x = gamepad1.left_stick_x;
-            float y = gamepad1.left_stick_y;
+            float y = gamepad1.left_stick_y * -1;
             float turn = gamepad1.right_stick_x;
+            float shoot = gamepad2.right_trigger;
+            float intake = gamepad2.left_trigger;
+            float intakeServo = gamepad2.right_stick_y;
+
             
             double theta = Math.atan2(y, x);
             double power = Math.hypot(x, y);
@@ -89,21 +100,25 @@ public class uhhersteleop extends LinearOpMode {
             
             frontLeftDrive.setPower(power * cos/max + turn);
             frontRightDrive.setPower(power * sin/max - turn);
-            backLeftRDrive.setPower(power * sin/max + turn);
-            backRightDrive.setPower(power * cos/max - turn);
+            rearLeftDrive.setPower(power * sin/max + turn);
+            rearRightDrive.setPower(power * cos/max - turn);
             
             if ((power + Math.abs(turn)) > 1) {
-                leftFrontDrive.setPower(leftFrontDrive.getPower() / power + turn);
-                rightFrontDrive.setPower(rightFrontDrive.getPower() / power + turn);
-                backLeftDrive.setPower(backLeftDrive.getPower() / power + turn);
-                backRightDrive.setPower(backRightDrive.getPower() / power + turn);
+                frontLeftDrive.setPower(frontLeftDrive.getPower() / power + turn);
+                frontRightDrive.setPower(frontRightDrive.getPower() / power - turn);
+                rearLeftDrive.setPower(rearLeftDrive.getPower() / power + turn);
+                rearRightDrive.setPower(rearRightDrive.getPower() / power - turn);
             }
+
+            launcherUp.setPower(-1 * shoot);
+            launcherDown.setPower(shoot);
+            intakeMotor.setPower(intake);
             
             telemetry.addData("power:", JavaUtil.formatNumber(power, 3));
             telemetry.addData("degrees:", JavaUtil.formatNumber(Math.toDegrees(theta), 3));
             telemetry.update();
 
-            //TODO: Intake code
+            //TODO: Intake code 
             //TODO: Shooter code
           }
         }
