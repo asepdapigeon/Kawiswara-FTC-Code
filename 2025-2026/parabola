@@ -1,4 +1,4 @@
-public class parabola {
+x`public class parabola {
     public static void main(String[] args) {
         // double voltage = hardwareMap.get(VoltageSensor.class, "Control Hub").getVoltage();
         double voltage = 12;
