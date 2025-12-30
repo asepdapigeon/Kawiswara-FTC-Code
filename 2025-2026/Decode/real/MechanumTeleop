@@ -90,7 +90,6 @@ public class uhhersteleop extends LinearOpMode {
             float intake = gamepad2.left_trigger;
             float intakeServo = gamepad2.right_stick_y;
 
-            
             double theta = Math.atan2(y, x);
             double power = Math.hypot(x, y);
             
@@ -115,7 +114,7 @@ public class uhhersteleop extends LinearOpMode {
             intakeMotor.setPower(intake);
             
             telemetry.addData("power:", JavaUtil.formatNumber(power, 3));
-            telemetry.addData("degrees:", JavaUtil.formatNumber(Math.toDegrees(theta), 3));
+            telemetry.addData("joystick degrees:", JavaUtil.formatNumber(Math.toDegrees(theta), 3));
             telemetry.update();
 
             //TODO: Intake code 

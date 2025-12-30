@@ -26,7 +26,7 @@ That means the movement for each 1 revolution is and assuming no load;
 Forward movement: {circumference * tiltratio:.5f}
 45 degree movement: {circumference:.5f}
 
-Speed assuming no load:
+Speed assuming no load:w
 Current battery voltage is {voltage}, and the code has \".setPower({setpower})\".
 With these conditions, wheel and the motor can move at a forward speed of {(circumference * tiltratio) * RPM:.5f}mm per minute,
 or {(circumference * tiltratio) * RPM / 60:.5f}mm per second

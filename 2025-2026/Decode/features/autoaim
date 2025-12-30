@@ -1,0 +1,137 @@
+package org.firstinspires.ftc.teamcode;
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+@TeleOp(name="uhhersteleop", group="Linear OpMode")
+public class uhhersteleop extends LinearOpMode {
+  
+  private ElapsedTime runtime = new ElapsedTime();
+  private DcMotor rearLeftDrive = null;
+  private DcMotor rearRightDrive = null;
+  private DcMotor frontLeftDrive = null;
+  private DcMotor frontRightDrive = null;
+  private DcMotor launcherUp = null;
+  private DcMotor launcherDown = null;
+    
+  private double tagX = 0.0;         // Left/right offset from camera center (inches)
+  private double tagY = 0.0;         // Forward distance from camera (inches)
+  private double tagZ = 0.0;         // Up/down offset from camera center (inches)
+  private double tagYaw = 0.0;       // Tag's rotation around vertical axis (degrees)
+  private double tagPitch = 0.0;     // Tag's up/down tilt (degrees)
+  private double tagRoll = 0.0;      // Tag's side-to-side tilt (degrees)
+  private double tagRange = 0.0;     // Straight-line distance to tag (inches)
+  private double tagBearing = 0.0;   // Horizontal angle to tag (degrees, positive = left)
+  private double tagElevation = 0.0; // Vertical angle to tag (degrees, positive = up)
+  private boolean tagVisible = false; // True when a valid pose was seen this loop
+  private int tagId = -1;            // Optional: ID of the last detected tag
+
+  @Override
+  public void runOpMode() {
+
+    AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+            .setDrawAxes(true)
+            .setDrawCubeProjection(true)
+            .setDrawTagID(true)
+            .setDrawTagOutline(true)
+            .build();
+
+    VisionPortal visionPortal = new VisionPortal.Builder()
+            .addProcessor(tagProcessor)
+            .setCamera(hardwareMap.get(WebcamName.class, "insert webcam name here"))
+            .setCameraResolution(new Size(640, 480))
+            .build();
+
+    rearLeftDrive = hardwareMap.get(DcMotor.class, "rearLeftDrive");
+    rearRightDrive = hardwareMap.get(DcMotor.class, "rearRightDrive");
+    frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
+    frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
+    launcherUp = hardwareMap.get(DcMotor.class, "launcherUp");
+    launcherDown = hardwareMap.get(DcMotor.class, "launcherDown");
+    intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+    intakeServo = hardwareMap.get(Servo.class, "intakeServo");
+
+    rearLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+    frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+    launcherDown.setDirection(DcMotor.Direction.REVERSE);
+
+    
+    
+    waitForStart();
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      while (opModeIsActive()) {
+        if (tagProcessor.getDetections.size() > 0) {
+          AprilTagDetection tag = tagProcessor.getDetections.get(0);
+
+          if (tag.ftcPose != null) {
+            tagX         = tag.ftcPose.x;
+            tagY         = tag.ftcPose.y;
+            tagZ         = tag.ftcPose.z;
+            tagYaw       = tag.ftcPose.yaw;
+            tagPitch     = tag.ftcPose.pitch;
+            tagRoll      = tag.ftcPose.roll;
+            tagRange     = tag.ftcPose.range;
+            tagBearing   = tag.ftcPose.bearing;
+            tagElevation = tag.ftcPose.elevation;
+
+            tagId = tag.id;           // Save the ID too if you want
+            tagVisible = true;
+          }
+        }
+
+        float x = gamepad1.left_stick_x;
+        float y = gamepad1.left_stick_y * -1;
+        boolean autoAim = gamepad1.right_bumper;
+        if (autoAim == false) {
+          float turn = gamepad1.right_stick_x;
+        } else if (autoAim == true) {
+          if (tagBearing >= 3) {
+            float turn = -1
+          } else if (tagBearing <= 3) {
+            float turn = 1
+          }
+        }
+        
+        float shoot = gamepad2.right_trigger;
+        float intake = gamepad2.left_trigger;
+        float intakeServo = gamepad2.right_stick_y;
+        
+        double theta = Math.atan2(y, x);
+        double power = Math.hypot(x, y);
+        
+        double sin = Math.sin(theta - Math.PI/4);
+        double cos = Math.cos(theta - Math.PI/4);
+        double max = Math.max(Math.abs(sin), Math.abs(cos));
+        
+        frontLeftDrive.setPower(power * cos/max + turn);
+        frontRightDrive.setPower(power * sin/max - turn);
+        rearLeftDrive.setPower(power * sin/max + turn);
+        rearRightDrive.setPower(power * cos/max - turn);
+        
+        if ((power + Math.abs(turn)) > 1) {
+            frontLeftDrive.setPower(frontLeftDrive.getPower() / power + turn);
+            frontRightDrive.setPower(frontRightDrive.getPower() / power - turn);
+            rearLeftDrive.setPower(rearLeftDrive.getPower() / power + turn);
+            rearRightDrive.setPower(rearRightDrive.getPower() / power - turn);
+        }
+
+        launcherUp.setPower(-1 * shoot);
+        launcherDown.setPower(shoot);
+        intakeMotor.setPower(intake);
+        
+        telemetry.addData("power:", JavaUtil.formatNumber(power, 3));
+        telemetry.addData("joystick degrees:", JavaUtil.formatNumber(Math.toDegrees(theta), 3));
+        telemetry.update();
+      }
+    }
+  }
+}
