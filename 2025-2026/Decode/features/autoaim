@@ -62,8 +62,6 @@ public class uhhersteleop extends LinearOpMode {
     rearLeftDrive.setDirection(DcMotor.Direction.REVERSE);
     frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
     launcherDown.setDirection(DcMotor.Direction.REVERSE);
-
-    
     
     waitForStart();
     if (opModeIsActive()) {
@@ -100,7 +98,7 @@ public class uhhersteleop extends LinearOpMode {
             float turn = 1
           }
         }
-        
+
         float shoot = gamepad2.right_trigger;
         float intake = gamepad2.left_trigger;
         float intakeServo = gamepad2.right_stick_y;
