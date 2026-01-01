@@ -1,4 +1,11 @@
-x`public class parabola {
+// ----------------------------------------------------------------------------
+//                                 WARNING
+// 
+// this thing is severely outdated, DO NOT use this for reference codes
+// you can delete it if you want, but i dont suggest that (may be useful later)
+// ----------------------------------------------------------------------------
+
+public class parabola {
     public static void main(String[] args) {
         // double voltage = hardwareMap.get(VoltageSensor.class, "Control Hub").getVoltage();
         double voltage = 12;
@@ -6,9 +13,9 @@ x`public class parabola {
         double circumferenceMM = 45 * Math.PI;
         double circumferenceM = circumferenceMM/1000;
 
-        double heightdiff = 0.8975;
+        double heightdiff = 0.9845;     
         double distance = 2;
-        double launchDegree = 48;
+        double launchDegree = 35;
 
         double powerneeded = Math.sqrt(
             (9.8*Math.pow(distance, 2))/

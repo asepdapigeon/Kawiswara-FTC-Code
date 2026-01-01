@@ -14,25 +14,25 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp(name="uhhersteleop", group="Linear OpMode")
 public class uhhersteleop extends LinearOpMode {
   
-  private ElapsedTime runtime = new ElapsedTime();
-  private DcMotor rearLeftDrive = null;
-  private DcMotor rearRightDrive = null;
-  private DcMotor frontLeftDrive = null;
-  private DcMotor frontRightDrive = null;
-  private DcMotor launcherUp = null;
-  private DcMotor launcherDown = null;
+  ElapsedTime runtime = new ElapsedTime();
+  DcMotor rearLeftDrive = null;
+  DcMotor rearRightDrive = null;
+  DcMotor frontLeftDrive = null;
+  DcMotor frontRightDrive = null;
+  DcMotor launcherUp = null;
+  DcMotor launcherDown = null;
     
-  private double tagX = 0.0;         // Left/right offset from camera center (inches)
-  private double tagY = 0.0;         // Forward distance from camera (inches)
-  private double tagZ = 0.0;         // Up/down offset from camera center (inches)
-  private double tagYaw = 0.0;       // Tag's rotation around vertical axis (degrees)
-  private double tagPitch = 0.0;     // Tag's up/down tilt (degrees)
-  private double tagRoll = 0.0;      // Tag's side-to-side tilt (degrees)
-  private double tagRange = 0.0;     // Straight-line distance to tag (inches)
-  private double tagBearing = 0.0;   // Horizontal angle to tag (degrees, positive = left)
-  private double tagElevation = 0.0; // Vertical angle to tag (degrees, positive = up)
-  private boolean tagVisible = false; // True when a valid pose was seen this loop
-  private int tagId = -1;            // Optional: ID of the last detected tag
+  double tagX = 0.0;         // Left/right offset from camera center (inches)
+  double tagY = 0.0;         // Forward distance from camera (inches)
+  double tagZ = 0.0;         // Up/down offset from camera center (inches)
+  double tagYaw = 0.0;       // Tag's rotation around vertical axis (degrees)
+  double tagPitch = 0.0;     // Tag's up/down tilt (degrees)
+  double tagRoll = 0.0;      // Tag's side-to-side tilt (degrees)
+  double tagRange = 0.0;     // Straight-line distance to tag (inches)
+  double tagBearing = 0.0;   // Horizontal angle to tag (degrees, positive = left)
+  double tagElevation = 0.0; // Vertical angle to tag (degrees, positive = up)
+  boolean tagVisible = false; // True when a valid pose was seen this loop
+  int tagId = -1;            // Optional: ID of the last detected tag
 
   @Override
   public void runOpMode() {
@@ -110,6 +110,33 @@ public class uhhersteleop extends LinearOpMode {
         double cos = Math.cos(theta - Math.PI/4);
         double max = Math.max(Math.abs(sin), Math.abs(cos));
         
+        double voltage = hardwareMap.get(VoltageSensor.class, "Control Hub").getVoltage();
+        double RPM_nominal = 6000 * (voltage / 12.0); // Nominal max RPM at current voltage
+        // TODO: recheck motor max no-load speed (current assumption: 6000 RPM at 12V)
+        double wheelDiameterMM = 45; // Wheel diameter in mm
+        double circumferenceMM = wheelDiameterMM * Math.PI;
+        // TODO: recheck wheel/flywheel diameter (current: 45 mm)
+        double circumferenceM = circumferenceMM / 1000.0; // Circumference in meters
+        double goalHeight_cm = 98.45; // Goal height in cm
+        double goalHeight_m = goalHeight_cm / 100.0;
+        double launcherHeightOffset_cm = 0; // Launcher height offset from ground in cm
+        // TODO: measure launcher exit height from ground (current: 0 cm)
+        double launcherHeightOffset_m = launcherHeightOffset_cm / 100.0;
+        double distance_m = tagRange * 0.0254; // tagRange is in inches (FTC AprilTag default units) // Assuming tagRange is in meters (common with AprilTag ranging)
+        double launchDegree_deg = 35; // Launch angle in degrees
+        // TODO: recheck/measured launcher fixed angle or tune for best trajectory (current: 35°)
+        double launchDegree_rad = Math.toRadians(launchDegree_deg);
+        double g = 9.81; // Gravity in m/s²
+        double delta_h = goalHeight_m - launcherHeightOffset_m; // Height difference (positive = shooting upward)
+        double velocity_ms = Math.sqrt(
+            (g * Math.pow(distance_m, 2)) /
+            (Math.pow(Math.cos(launchDegree_rad), 2) * (distance_m * Math.tan(launchDegree_rad) + delta_h))
+        );
+        double requiredRPM = (velocity_ms * 60.0) / circumferenceM; // Required wheel surface speed = projectile exit velocity
+        double shooterMotorPower = requiredRPM / RPM_nominal; // Motor power as fraction of max RPM
+        double MIN_SHOOTER_POWER = 0.1; // Tune this empirically
+        shooterMotorPower = Math.max(MIN_SHOOTER_POWER, Math.min(1.0, shooterMotorPower));
+
         frontLeftDrive.setPower(power * cos/max + turn);
         frontRightDrive.setPower(power * sin/max - turn);
         rearLeftDrive.setPower(power * sin/max + turn);
