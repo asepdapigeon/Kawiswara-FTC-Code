@@ -1,0 +1,162 @@
+package org.firstinspires.ftc.teamcode;
+import org.firstinspires.ftc.robotcore.external.JavaUtil;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
+
+@TeleOp(name="uhhersteleop", group="Linear OpMode")
+public class uhhersteleop extends LinearOpMode {
+  
+  ElapsedTime runtime = new ElapsedTime();
+  DcMotor rearLeftDrive = null;
+  DcMotor rearRightDrive = null;
+  DcMotor frontLeftDrive = null;
+  DcMotor frontRightDrive = null;
+  DcMotor launcherUp = null;
+  DcMotor launcherDown = null;
+    
+  double tagX = 0.0;         // Left/right offset from camera center (inches)
+  double tagY = 0.0;         // Forward distance from camera (inches)
+  double tagZ = 0.0;         // Up/down offset from camera center (inches)
+  double tagYaw = 0.0;       // Tag's rotation around vertical axis (degrees)
+  double tagPitch = 0.0;     // Tag's up/down tilt (degrees)
+  double tagRoll = 0.0;      // Tag's side-to-side tilt (degrees)
+  double tagRange = 0.0;     // Straight-line distance to tag (inches)
+  double tagBearing = 0.0;   // Horizontal angle to tag (degrees, positive = left)
+  double tagElevation = 0.0; // Vertical angle to tag (degrees, positive = up)
+  boolean tagVisible = false; // True when a valid pose was seen this loop
+  int tagId = -1;            // Optional: ID of the last detected tag
+
+  @Override
+  public void runOpMode() {
+
+    AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+            .setDrawAxes(true)
+            .setDrawCubeProjection(true)
+            .setDrawTagID(true)
+            .setDrawTagOutline(true)
+            .build();
+
+    VisionPortal visionPortal = new VisionPortal.Builder()
+            .addProcessor(tagProcessor)
+            .setCamera(hardwareMap.get(WebcamName.class, "insert webcam name here"))
+            .setCameraResolution(new Size(640, 480))
+            .build();
+
+    rearLeftDrive = hardwareMap.get(DcMotor.class, "rearLeftDrive");
+    rearRightDrive = hardwareMap.get(DcMotor.class, "rearRightDrive");
+    frontLeftDrive = hardwareMap.get(DcMotor.class, "frontLeftDrive");
+    frontRightDrive = hardwareMap.get(DcMotor.class, "frontRightDrive");
+    launcherUp = hardwareMap.get(DcMotor.class, "launcherUp");
+    launcherDown = hardwareMap.get(DcMotor.class, "launcherDown");
+    intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+    intakeServo = hardwareMap.get(Servo.class, "intakeServo");
+
+    rearLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+    frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+    launcherDown.setDirection(DcMotor.Direction.REVERSE);
+    
+    waitForStart();
+    if (opModeIsActive()) {
+      // Put run blocks here.
+      while (opModeIsActive()) {
+        if (tagProcessor.getDetections.size() > 0) {
+          AprilTagDetection tag = tagProcessor.getDetections.get(0);
+
+          if (tag.ftcPose != null) {
+            tagX         = tag.ftcPose.x;
+            tagY         = tag.ftcPose.y;
+            tagZ         = tag.ftcPose.z;
+            tagYaw       = tag.ftcPose.yaw;
+            tagPitch     = tag.ftcPose.pitch;
+            tagRoll      = tag.ftcPose.roll;
+            tagRange     = tag.ftcPose.range;
+            tagBearing   = tag.ftcPose.bearing;
+            tagElevation = tag.ftcPose.elevation;
+
+            tagId = tag.id;           // Save the ID too if you want
+            tagVisible = true;
+          }
+        }
+
+        float x = gamepad1.left_stick_x;
+        float y = gamepad1.left_stick_y * -1;
+        boolean autoAim = gamepad1.right_bumper;
+        if (autoAim == false) {
+          float turn = gamepad1.right_stick_x;
+        } else if (autoAim == true) {
+          if (tagBearing >= 3) {
+            float turn = -1
+          } else if (tagBearing <= 3) {
+            float turn = 1
+          }
+        }
+
+        float shoot = gamepad2.right_trigger;
+        float intake = gamepad2.left_trigger;
+        float intakeServo = gamepad2.right_stick_y;
+        
+        double theta = Math.atan2(y, x);
+        double power = Math.hypot(x, y);
+        
+        double sin = Math.sin(theta - Math.PI/4);
+        double cos = Math.cos(theta - Math.PI/4);
+        double max = Math.max(Math.abs(sin), Math.abs(cos));
+        
+        double voltage = hardwareMap.get(VoltageSensor.class, "Control Hub").getVoltage();
+        double RPM_nominal = 6000 * (voltage / 12.0); // Nominal max RPM at current voltage
+        // TODO: recheck motor max no-load speed (current assumption: 6000 RPM at 12V)
+        double wheelDiameterMM = 45; // Wheel diameter in mm
+        double circumferenceMM = wheelDiameterMM * Math.PI;
+        // TODO: recheck wheel/flywheel diameter (current: 45 mm)
+        double circumferenceM = circumferenceMM / 1000.0; // Circumference in meters
+        double goalHeight_cm = 98.45; // Goal height in cm
+        double goalHeight_m = goalHeight_cm / 100.0;
+        double launcherHeightOffset_cm = 0; // Launcher height offset from ground in cm
+        // TODO: measure launcher exit height from ground (current: 0 cm)
+        double launcherHeightOffset_m = launcherHeightOffset_cm / 100.0;
+        double distance_m = tagRange * 0.0254; // tagRange is in inches (FTC AprilTag default units) // Assuming tagRange is in meters (common with AprilTag ranging)
+        double launchDegree_deg = 35; // Launch angle in degrees
+        // TODO: recheck/measured launcher fixed angle or tune for best trajectory (current: 35°)
+        double launchDegree_rad = Math.toRadians(launchDegree_deg);
+        double g = 9.81; // Gravity in m/s²
+        double delta_h = goalHeight_m - launcherHeightOffset_m; // Height difference (positive = shooting upward)
+        double velocity_ms = Math.sqrt(
+            (g * Math.pow(distance_m, 2)) /
+            (Math.pow(Math.cos(launchDegree_rad), 2) * (distance_m * Math.tan(launchDegree_rad) + delta_h))
+        );
+        double requiredRPM = (velocity_ms * 60.0) / circumferenceM; // Required wheel surface speed = projectile exit velocity
+        double shooterMotorPower = requiredRPM / RPM_nominal; // Motor power as fraction of max RPM
+        double MIN_SHOOTER_POWER = 0.1; // Tune this empirically
+        shooterMotorPower = Math.max(MIN_SHOOTER_POWER, Math.min(1.0, shooterMotorPower));
+
+        frontLeftDrive.setPower(power * cos/max + turn);
+        frontRightDrive.setPower(power * sin/max - turn);
+        rearLeftDrive.setPower(power * sin/max + turn);
+        rearRightDrive.setPower(power * cos/max - turn);
+        
+        if ((power + Math.abs(turn)) > 1) {
+            frontLeftDrive.setPower(frontLeftDrive.getPower() / power + turn);
+            frontRightDrive.setPower(frontRightDrive.getPower() / power - turn);
+            rearLeftDrive.setPower(rearLeftDrive.getPower() / power + turn);
+            rearRightDrive.setPower(rearRightDrive.getPower() / power - turn);
+        }
+
+        launcherUp.setPower(-1 * shoot);
+        launcherDown.setPower(shoot);
+        intakeMotor.setPower(intake);
+        
+        telemetry.addData("power:", JavaUtil.formatNumber(power, 3));
+        telemetry.addData("joystick degrees:", JavaUtil.formatNumber(Math.toDegrees(theta), 3));
+        telemetry.update();
+      }
+    }
+  }
+}
